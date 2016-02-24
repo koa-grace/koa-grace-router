@@ -1,0 +1,22 @@
+{
+  "name": "koa-grace-router",
+  "version": "1.0.18",
+  "description": "通过目录名自动生成路由的KOA中间件",
+  "main": "index.js",
+  "scripts": {
+    "test": "DEBUG=* node --harmony ./example/app"
+  },
+  "keywords": [
+    "koa",
+    "route",
+    "router",
+    "grace-router"
+  ],
+  "dependencies": {
+    "koa": "*",
+    "koa-router": "^5.3.0"
+  },
+  "author": "wilee",
+  "license": "MIT",
+  "repository": "https://github.com/koa-grace/koa-grace-router.git"
+}
