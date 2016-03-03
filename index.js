@@ -159,7 +159,7 @@ function hornbillRouter(app, options) {
   });
 
   return function* hornbillRouter(next) {
-    yield * next;
+    yield next;
   };
 };
 
