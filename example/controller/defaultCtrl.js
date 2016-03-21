@@ -2,6 +2,9 @@ module.exports = function*() {
   function getData() {
     return function(callback) {
       setTimeout(function() {
+
+        console.log('this is defaultCtrl');
+
         callback(0, {
           userInfo : {
           	user_id : 0
@@ -12,8 +15,6 @@ module.exports = function*() {
   }
 
   var data = yield getData();
-
-  this.assert(this.state.user, 401, 'User not found. Please login!');
 
   this.backData = data;
 

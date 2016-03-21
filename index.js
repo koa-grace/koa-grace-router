@@ -96,13 +96,13 @@ function hornbillRouter(app, options) {
 
     // 注入路由
     paths.forEach(function(pathItem) {
-      debug( method + ':' + Domain + pathItem );
+      debug(method + ':' + Domain + pathItem);
       Router[method](pathItem, opt.ctrl);
     });
 
     return;
   }
-  
+
   // app的默认路由
   if (options.default_path) {
     Router.redirect('/', options.default_path);
@@ -116,8 +116,7 @@ function hornbillRouter(app, options) {
     throw new Error('`root` config required.');
   }
 
-  const root = options.root;
-
+  let root = options.root;
   _ls(root).forEach(function(filePath) {
     if (!/([a-zA-Z0-9_\-]+)(\.js)$/.test(filePath)) {
       return;
@@ -127,7 +126,7 @@ function hornbillRouter(app, options) {
     let pathRegexp = _formatPath(filePath, root);
 
     // 如果当前设置了不是路由，则暂停
-    if(exportFuncs.__controller__ === false){
+    if (exportFuncs.__controller__ === false) {
       return;
     }
 
@@ -156,6 +155,13 @@ function hornbillRouter(app, options) {
     }
 
     app.use(Router.routes());
+  });
+
+  // 添加bindDefault方法
+  let deafaultCtrlRoot = options.deafaultCtrlRoot || options.root;
+  deafaultCtrlRoot += '/defaultCtrl';
+  app.context.__defineGetter__("bindDefault", function() {
+    return require(deafaultCtrlRoot);
   });
 
   return function* hornbillRouter(next) {
