@@ -82,14 +82,7 @@ function graceRouter(app, options) {
     return require(deafaultCtrlRoot);
   });
 
-  return function* graceRouter(next) {
-    
-    debug(this.request.url);
-
-    yield Router.routes();
-
-    yield next;
-  };
+  return Router.routes();
 };
 
 
