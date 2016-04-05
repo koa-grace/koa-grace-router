@@ -5,8 +5,6 @@ const fs = require('fs');
 const router = require('koa-router');
 const debug = require('debug')('koa-grace:router');
 
-const Router = router();
-
 /**
  * 生成路由控制
  * @param  {string} app     context
@@ -17,6 +15,8 @@ const Router = router();
  * @return {function}       
  */
 function graceRouter(app, options) {
+  const Router = router();
+
   const Domain = options.domain || '';
 
   // app的默认路由
@@ -50,7 +50,7 @@ function graceRouter(app, options) {
     let ctrlRegular = exportFuncs.__regular__;
 
     if (typeof exportFuncs === 'function') {
-      _setRoute(pathRegexp, {
+      _setRoute(Router, pathRegexp, {
         domain: Domain,
         method: ctrlMethod,
         ctrl: exportFuncs,
@@ -62,7 +62,7 @@ function graceRouter(app, options) {
           continue;
         }
 
-        _setRoute(pathRegexp, {
+        _setRoute(Router, pathRegexp, {
           domain: Domain,
           method: exportFuncs[ctrlname].__method__ || ctrlMethod,
           regular: exportFuncs[ctrlname].__regular__ || ctrlRegular,
@@ -148,7 +148,7 @@ function _formatPath(filePath, root) {
  *        {string} opt.ctrlname 当前controller名称
  *        {funtion} opt.ctrl controller方法
  */
-function _setRoute(path, opt) {
+function _setRoute(Router, path, opt) {
   let paths = [];
   let method = opt.method || 'get';
   let pathname = opt.ctrlname ? (path + '/' + opt.ctrlname) : path;
@@ -164,7 +164,7 @@ function _setRoute(path, opt) {
 
   // 注入路由
   paths.forEach(function(pathItem) {
-    debug(method + ':' + opt.Domain + pathItem);
+    debug(method + ':' + opt.domain + pathItem);
 
     Router[method](pathItem, opt.ctrl);
   });
