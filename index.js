@@ -15,15 +15,6 @@ const debug = require('debug')('koa-grace:router');
  * @return {function}       
  */
 function graceRouter(app, options) {
-  const Router = router();
-
-  const Domain = options.domain || '';
-
-  // app的默认路由
-  if (options.default_path) {
-    Router.redirect('/', options.default_path);
-  }
-
   if (typeof options === 'string') {
     options = {
       root: options
@@ -32,7 +23,22 @@ function graceRouter(app, options) {
     throw new Error('`root` config required.');
   }
 
+  const Router = router();
+  const Domain = options.domain || '';
+
+  // app的默认路由
+  if (options.default_path) {
+    Router.redirect('/', options.default_path);
+  }
+
   let root = options.root;
+  
+  // 如果root不存在则直接跳过
+  if (!fs.existsSync(root)) {
+    debug('error : can\'t find route path ' + root);
+    return function* ctrl(next) { yield next; };
+  }
+
   _ls(root).forEach(function(filePath) {
     if (!/([a-zA-Z0-9_\-]+)(\.js)$/.test(filePath)) {
       return;
@@ -82,7 +88,7 @@ function graceRouter(app, options) {
     return require(deafaultCtrlRoot);
   });
 
-  return function* graceRouter(next){
+  return function* graceRouter(next) {
     yield Router.routes();
     yield next;
   }
