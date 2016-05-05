@@ -1,6 +1,6 @@
 {
   "name": "koa-grace-router",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "description": "通过目录名自动生成路由的KOA中间件",
   "main": "index.js",
   "scripts": {
@@ -13,8 +13,7 @@
     "grace-router"
   ],
   "dependencies": {
-    "koa": "*",
-    "koa-router": "^5.3.0"
+    "koa": "*"
   },
   "author": "wilee",
   "license": "MIT",

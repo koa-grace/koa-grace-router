@@ -2,7 +2,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const router = require('koa-router');
+const router = require('./lib/router');
 const debug = require('debug')('koa-grace:router');
 
 /**
