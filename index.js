@@ -32,7 +32,7 @@ function graceRouter(app, options) {
   }
 
   let root = options.root;
-  
+
   // 如果root不存在则直接跳过
   if (!fs.existsSync(root)) {
     debug('error : can\'t find route path ' + root);
@@ -47,38 +47,15 @@ function graceRouter(app, options) {
     let exportFuncs = require(filePath);
     let pathRegexp = _formatPath(filePath, root);
 
-    // 如果当前设置了不是路由，则暂停
-    if (exportFuncs.__controller__ === false) {
-      return;
-    }
-
-    let ctrlMethod = exportFuncs.__method__;
-    let ctrlRegular = exportFuncs.__regular__;
-
-    if (typeof exportFuncs === 'function') {
-      _setRoute(Router, pathRegexp, {
+    getRoute(exportFuncs, function(exportFun, ctrlpath) {
+      _setRoute(Router, {
         domain: Domain,
-        method: ctrlMethod,
-        ctrl: exportFuncs,
-        regular: ctrlRegular
+        method: exportFun.__method__,
+        regular: exportFun.__regular__,
+        ctrlpath: ctrlpath,
+        ctrl: exportFun
       });
-    } else {
-      for (let ctrlname in exportFuncs) {
-        if (typeof exportFuncs[ctrlname] !== 'function') {
-          continue;
-        }
-
-        _setRoute(Router, pathRegexp, {
-          domain: Domain,
-          method: exportFuncs[ctrlname].__method__ || ctrlMethod,
-          regular: exportFuncs[ctrlname].__regular__ || ctrlRegular,
-          ctrlname: ctrlname,
-          ctrl: exportFuncs[ctrlname]
-        });
-      };
-    }
-
-    // app.use(Router.routes());
+    }, [pathRegexp]);
   });
 
   // 添加bindDefault方法
@@ -94,6 +71,42 @@ function graceRouter(app, options) {
   }
 };
 
+/**
+ * 递归生成路由，层级不超过3级
+ * @param  {Object|Function}  exportFuncs 获取到的路由
+ * @param  {Array}            ctrlpath    路由记录
+ * @return
+ */
+function getRoute(exportFuncs, cb, ctrlpath, curCtrlname) {
+  ctrlpath = ctrlpath || [];
+
+  // 如果当前设置了不是路由，则直接返回
+  if (exportFuncs.__controller__ === false) {
+    return;
+  }
+
+  let totalCtrlname = curCtrlname ? ctrlpath.concat([curCtrlname]) : ctrlpath;
+
+  // 只允许3级路由层级
+  if (ctrlpath.length > 3) {
+    debug(`嵌套路由对象层级不能超过3级：${totalCtrlname.join('/')}`);
+    return;
+  }
+
+  // 如果是一个方法就直接执行cb
+  if (typeof exportFuncs === 'function') {
+    cb(exportFuncs, totalCtrlname);
+  } else {
+    // 否则进行循环递归查询
+    for (let ctrlname in exportFuncs) {
+      if (!exportFuncs.hasOwnProperty(ctrlname)) {
+        continue
+      }
+
+      getRoute(exportFuncs[ctrlname], cb, totalCtrlname, ctrlname);
+    }
+  }
+}
 
 /**
  * 查找目录中的所有文件
@@ -157,19 +170,24 @@ function _formatPath(filePath, root) {
  *        {string} opt.ctrlname 当前controller名称
  *        {funtion} opt.ctrl controller方法
  */
-function _setRoute(Router, path, opt) {
+function _setRoute(Router, opt) {
   let paths = [];
   let method = opt.method || 'get';
-  let pathname = opt.ctrlname ? (path + '/' + opt.ctrlname) : path;
+  let ctrlpath = opt.ctrlpath.join('/')
 
-  // 真实路由
-  paths.push(pathname);
+  // 加入当前路由
+  paths.push(ctrlpath)
 
-  // 如果配置了regular则配置regular路由，例如：/post的regular为/:id,则添加一个/post/:id的路由
-  opt.regular && paths.push(pathname + opt.regular);
+  // 如果当前路由是以index结尾，则把其服路由也加入路由
+  if (opt.ctrlpath.slice(-1)[0] === 'index') {
+    let parpath = opt.ctrlpath.slice(0, -1);
+    paths.push(parpath.join('/'));
+  }
 
-  // 如果是index就是当前路径的默认路由
-  opt.ctrlname === 'index' && paths.push(path);
+  // 如果有regular则加入regular路由
+  if (opt.regular) {
+    paths.push(ctrlpath + opt.regular);
+  }
 
   // 注入路由
   paths.forEach(function(pathItem) {
@@ -177,8 +195,6 @@ function _setRoute(Router, path, opt) {
 
     Router[method](pathItem, opt.ctrl);
   });
-
-  return;
 }
 
-module.exports = graceRouter
+module.exports = graceRouter;
