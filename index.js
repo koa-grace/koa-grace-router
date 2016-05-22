@@ -23,7 +23,7 @@ function graceRouter(app, options) {
     throw new Error('`root` config required.');
   }
 
-  const Router = router();
+  const Router = router(options);
   const Domain = options.domain || '';
 
   // app的默认路由

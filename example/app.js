@@ -4,7 +4,8 @@ var router = require('..');
 var app = koa();
 
 app.use(router(app, {
-  root: './example/controller'
+  root: './example/controller',
+  errorPath : '/error/404'
 }));
 
 app.listen(3000, function() {
