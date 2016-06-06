@@ -5,7 +5,9 @@ var app = koa();
 
 app.use(router(app, {
   root: './example/controller',
-  errorPath : '/error/404'
+  errorPath: '/error/404',
+  default_path: '/index/index',
+  default_jump: false
 }));
 
 app.listen(3000, function() {

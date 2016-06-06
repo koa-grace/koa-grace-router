@@ -10,6 +10,7 @@ const debug = require('debug')('koa-grace:router');
  * @param  {string} app     context
  * @param  {object} options 配置项
  *         {string} options.root controller路径
+ *         {string} options.defualt_jump 如果访问路径为纯域名是否做跳转，默认为false
  *         {string} options.default_path 默认路径
  *         {string} options.domain 请求域名,可不传
  * @return {function}       
@@ -27,7 +28,7 @@ function graceRouter(app, options) {
   const Domain = options.domain || '';
 
   // app的默认路由
-  if (options.default_path) {
+  if (options.default_jump !== false && options.default_path) {
     Router.redirect('/', options.default_path);
   }
 
@@ -54,7 +55,7 @@ function graceRouter(app, options) {
         regular: exportFun.__regular__,
         ctrlpath: ctrlpath,
         ctrl: exportFun
-      });
+      }, options);
     }, [pathRegexp]);
   });
 
@@ -164,36 +165,42 @@ function _formatPath(filePath, root) {
 /**
  * 设置路由
  * @param {string} path 当前文件路径
- * @param {object} opt  配置项
- *        {string} opt.method 当前请求方法：get,post等
- *        {string} opt.regular 参考：https://github.com/alexmingoia/koa-router#nested-routers
- *        {string} opt.ctrlname 当前controller名称
- *        {funtion} opt.ctrl controller方法
+ * @param {object} config  配置项
+ *        {string} config.method 当前请求方法：get,post等
+ *        {string} config.regular 参考：https://github.com/alexmingoia/koa-router#nested-routers
+ *        {string} config.ctrlname 当前controller名称
+ *        {funtion} config.ctrl controller方法
+ * @param {Obejct} options grace router配置
  */
-function _setRoute(Router, opt) {
+function _setRoute(Router, config, options) {
   let paths = [];
-  let method = opt.method || 'get';
-  let ctrlpath = opt.ctrlpath.join('/')
+  let method = config.method || 'get';
+  let ctrlpath = config.ctrlpath.join('/')
 
   // 加入当前路由
   paths.push(ctrlpath)
 
+  // 如果当前路由配置方案为不跳转，则设置路由'/'为options.default_path路由
+  if (options.default_jump === false && ctrlpath == options.default_path) {
+    paths.push('/');
+  }
+
   // 如果当前路由是以index结尾，则把其服路由也加入路由
-  if (opt.ctrlpath.slice(-1)[0] === 'index') {
-    let parpath = opt.ctrlpath.slice(0, -1);
+  if (config.ctrlpath.slice(-1)[0] === 'index') {
+    let parpath = config.ctrlpath.slice(0, -1);
     paths.push(parpath.join('/'));
   }
 
   // 如果有regular则加入regular路由
-  if (opt.regular) {
-    paths.push(ctrlpath + opt.regular);
+  if (config.regular) {
+    paths.push(ctrlpath + config.regular);
   }
 
   // 注入路由
   paths.forEach(function(pathItem) {
-    debug(method + ':' + opt.domain + pathItem);
+    debug(method + ':' + config.domain + pathItem);
 
-    Router[method](pathItem, opt.ctrl);
+    Router[method](pathItem, config.ctrl);
   });
 }
 
