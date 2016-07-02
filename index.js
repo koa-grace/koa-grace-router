@@ -153,12 +153,15 @@ function _formatPath(filePath, root) {
   let dir = root;
 
   if (!path.isAbsolute(root)) {
-    dir = path.join(process.cwd(), root)
+    dir = path.join(process.cwd(), root);
   }
 
+  // 修复windows下的\路径问题
+  dir = dir.replace(/\\/g, '/');
+
   return filePath
-    .replace(dir, '')
     .replace(/\\/g, '/')
+    .replace(dir, '')
     .split('.')[0];
 }
 
