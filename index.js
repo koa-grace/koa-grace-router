@@ -60,10 +60,17 @@ function graceRouter(app, options) {
   });
 
   // 添加bindDefault方法
+  // 如果defaultCtrl文件存在则注入，否则忽略
   let deafaultCtrlRoot = options.deafaultCtrlRoot || options.root;
-  deafaultCtrlRoot += '/defaultCtrl';
-  app.context.__defineGetter__("bindDefault", function() {
-    return require(deafaultCtrlRoot);
+  deafaultCtrlRoot += '/defaultCtrl.js';
+  app.context.__defineGetter__("bindDefault", () => {
+    if (fs.existsSync(deafaultCtrlRoot)) {
+      return require(deafaultCtrlRoot);
+    } else {
+      return function*() {
+        debug(`${deafaultCtrlRoot} is not defined!`)
+      }
+    }
   });
 
   return function* graceRouter(next) {
