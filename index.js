@@ -68,7 +68,7 @@ function graceRouter(app, options) {
       return require(deafaultCtrlRoot);
     } else {
       return function*() {
-        debug(`${deafaultCtrlRoot} is not defined!`)
+        debug(`Cannot find default controller '${deafaultCtrlRoot}'`)
       }
     }
   });
