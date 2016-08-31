@@ -6,6 +6,14 @@ const router = require('./lib/router');
 const debug = require('debug')('koa-grace:router');
 
 /**
+ * [_routerVerb 可以注册的方法]
+ * all = ['acl', 'bind', 'checkout', 'connect', 'copy', 'delete', 'get', 'head', 'link', 'lock', 'm-search', 'merge', 'mkactivity', 'mkcalendar', 'mkcol', 'move', 'notify', 'options', 'patch', 'post', 'propfind', 'proppatch', 'purge', 'put', 'rebind', 'report', 'search', 'subscribe', 'trace', 'unbind', 'unlink', 'unlock', 'unsubscribe' ]
+ * @all {会注册33个verb, 慎用！！！}
+ * delete {作为保留词，推荐使用别称：del}
+ */
+const _routerVerb = "get|post|put|patch|del|head|delete|all".split("|");
+
+/**
  * 生成路由控制
  * @param  {string} app     context
  * @param  {object} options 配置项
@@ -184,8 +192,12 @@ function _formatPath(filePath, root) {
  */
 function _setRoute(Router, config, options) {
   let paths = [];
-  let method = config.method || 'get';
+  // let method = config.method || 'get';
+  let method = (_routerVerb.indexOf(config.method) > -1) ? [config.method] : ['get', 'post'];
   let ctrlpath = config.ctrlpath.join('/')
+
+  // 若domain不存在 或 为字符串"undefined" 则不生成路由
+  if (!config.domain || config.domain === 'undefined') return;
 
   // 加入当前路由
   paths.push(ctrlpath)
@@ -195,7 +207,7 @@ function _setRoute(Router, config, options) {
     paths.push('/');
   }
 
-  // 如果当前路由是以index结尾，则把其服路由也加入路由
+  // 如果当前路由是以index结尾，则把其父路由也加入路由
   if (config.ctrlpath.slice(-1)[0] === 'index') {
     let parpath = config.ctrlpath.slice(0, -1);
     paths.push(parpath.join('/'));
@@ -206,12 +218,16 @@ function _setRoute(Router, config, options) {
     paths.push(ctrlpath + config.regular);
   }
 
-  // 注入路由
-  paths.forEach(function(pathItem) {
-    debug(method + ':' + config.domain + pathItem);
+  // 对每一个method，有定义时唯一，默认post/get
+  method.forEach((_method) => {
+    // 注入路由
+    paths.forEach((pathItem) => {
+      debug(_method + ':' + config.domain + pathItem);
 
-    Router[method](pathItem, config.ctrl);
+      Router[_method](pathItem, config.ctrl);
+    });
   });
+
 }
 
 module.exports = graceRouter;
