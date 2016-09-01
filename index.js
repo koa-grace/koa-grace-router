@@ -11,7 +11,7 @@ const debug = require('debug')('koa-grace:router');
  * @all {会注册33个verb, 慎用！！！}
  * delete {作为保留词，推荐使用别称：del}
  */
-const _routerVerb = "get|post|put|patch|del|head|delete|all".split("|");
+const _routerVerb = ['get','post','put','patch','del','head','delete','all'];
 
 /**
  * 生成路由控制
@@ -194,10 +194,7 @@ function _setRoute(Router, config, options) {
   let paths = [];
   // let method = config.method || 'get';
   let method = (_routerVerb.indexOf(config.method) > -1) ? [config.method] : ['get', 'post'];
-  let ctrlpath = config.ctrlpath.join('/')
-
-  // 若domain不存在 或 为字符串"undefined" 则不生成路由
-  if (!config.domain || config.domain === 'undefined') return;
+  let ctrlpath = config.ctrlpath.join('/');
 
   // 加入当前路由
   paths.push(ctrlpath)
